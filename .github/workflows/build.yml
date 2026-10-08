@@ -2,27 +2,30 @@ name: Build C++ EXE
 
 on:
   push:
-    branches: [ "main" ] # Runs every time you push or merge code to main
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: windows-latest # Required to build a Windows native .exe
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout Code with Submodules
       uses: actions/checkout@v4
       with:
-        submodules: recursive # Recommended since you have a "third_party" folder
+        submodules: 'recursive' # Ensures third_party dependencies are pulled correctly
+
+    - name: Setup MSBuild and DevCmd
+      uses: microsoft/setup-msbuild@v2
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+      # Using standard directory syntax to prevent execution context errors
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
     - name: Build Project
-      run: cmake --build ${{github.workspace}}/build --config Release
+      run: cmake --build build --config Release --parallel
 
     - name: Upload Executable Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Compiled-Windows-Binary
-        # This grabs any .exe file generated in your build directory
-        path: ${{github.workspace}}/build/**/*.exe 
+        path: build/**/*.exe
